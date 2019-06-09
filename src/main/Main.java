@@ -9,7 +9,7 @@ public class Main {
 		try {
 			//*
 			robot = new Robot("Robot Segway");
-			Equilibrio eq = new Lineal(robot);
+			Equilibrio eq = new LQR(robot);
 			//*/
 			//GyroBoy eq = new GyroBoy();
 			Thread t1 = new Thread(eq);

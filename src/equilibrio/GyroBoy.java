@@ -109,7 +109,7 @@ public class GyroBoy extends Thread {
 			mD = mSum - mSumOld;
 			mPos = mPos + mD;
 			mSpd = ((mD + mDP1 + mDP2 + mDP3) / 4.0) / dt; // motor rotational speed
-			System.out.println("["+mD + ", " + mDP1 + ", " + mDP2 + ", " + mDP3+ "] " );
+			//System.out.println("["+mD + ", " + mDP1 + ", " + mDP2 + ", " + mDP3+ "] " );
 			mDP3 = mDP2;
 			mDP2 = mDP1;
 			mDP1 = mD;
@@ -117,18 +117,18 @@ public class GyroBoy extends Thread {
 			// Compute new motor power
 			mPos -= speed;	// make GyroBoy go forward or backward
 			pwr = 0.08 * mSpd + 0.12 * mPos + 0.8 * gSpd + 15 * gAng;
-			System.out.println(0.08 + "*" + mSpd + " + " + 0.12 + "*" + mPos + " + " + 0.8 + "*" + gSpd + " + " + 15 + "*" + gAng);
+			//System.out.println(0.08 + "*" + mSpd + " + " + 0.12 + "*" + mPos + " + " + 0.8 + "*" + gSpd + " + " + 15 + "*" + gAng);
 			if (pwr > 100) pwr = 100;
 			if (pwr < -100) pwr = -100;
 			if (ready){
 				rightMotor.setPower((int) (pwr - direction));
 				leftMotor.setPower((int) (pwr + direction));
-				System.out.println("out = " + pwr);
+				//System.out.println("out = " + pwr);
 			}
 
 			Delay.msDelay(10);
 			loopCount++;
-			if (loopCount==10) ready=true;	// skip first 10 iterations
+			if (loopCount == 10) ready = true;	// skip first 10 iterations
 		}
 
 		rightMotor.close();

@@ -20,7 +20,8 @@ public class Robot {
 	private double aceleracion;
 	private double avance;
 	private double direccion;
-	int contador;
+	private boolean stop;
+	private int contador;
 	
 	final double DIAMETRO = 56; // (milimetros)
 	private final double RADIO = DIAMETRO/(2*1000); // (metros)
@@ -36,7 +37,7 @@ public class Robot {
 	
 	private EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
 	private SampleProvider gyroReader = gyroSensor.getRateMode();
-	//private static EV3GyroSensor presionSensor = new EV3GyroSensor(PRESION);
+	private static EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
 	//private static EV3GyroSensor colorSensor = new EV3GyroSensor(COLOR);
 	//private static EV3GyroSensor infraSensor = new EV3GyroSensor(INFRARROJOS);
 	GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
@@ -53,6 +54,7 @@ public class Robot {
 		this.setAvance(0);
 		this.contador = 0;
 		this.pantalla.clear();
+		this.stop = false;
 		mDer.resetTachoCount();
 		mIzq.resetTachoCount();
 	}
@@ -81,8 +83,9 @@ public class Robot {
 		{
 			this.gyroReader.fetchSample(sample, 0);
 			media = media + sample[0];
+			try{ Thread.sleep(2);} catch(Exception e) {}
 		}
-		return -media/vueltas;
+		return - media/vueltas; //TODO Con negativo?
 	}
 	
 	public double angle()
@@ -111,6 +114,14 @@ public class Robot {
 			default: 							break;
 		}
 		
+	}
+	
+	public boolean presionado()
+	{
+		SensorMode presion = presionSensor.getTouchMode();
+		float sample[] = {0};
+		presion.fetchSample(sample, 0);
+		return (sample[0] == 1);
 	}
 	
 	public void print(String s)
@@ -169,6 +180,14 @@ public class Robot {
 	public void setDireccion(double direccion)
 	{
 		this.direccion = direccion;
+	}
+
+	public boolean isStop() {
+		return stop || presionado();
+	}
+
+	public void setStop(boolean stop) {
+		this.stop = stop;
 	}
 	
 }

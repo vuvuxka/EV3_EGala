@@ -10,7 +10,7 @@ import main.Robot.Motor;
 public class PID extends Equilibrio{
 
 	final static int N_max = 7; // tamaño maximo del array de historico de posiciones
-	protected final double DT = 0.01;
+	protected final double DT = 0.02;
 	Stopwatch reloj = new Stopwatch();
 	
 	private static Queue<Double> historico = new LinkedList<Double>(Collections.nCopies(N_max, 0.0));
@@ -36,14 +36,14 @@ public class PID extends Equilibrio{
 	private static int vueltas = 0;
 	private static double avance_ant = 0;
 	
-	final static double Kp = 0.0336;
-	final static double Kd = 0.000504;
-	final static double Ki = 0.2688;
+	final static double Kp = 0.6;
+	final static double Ki = 0.05;
+	final static double Kd = 14;
 
-	final static double K_angulo = 25;
-	final static double K_rate = 1.3;
-	final static double K_pos = 700;
-	final static double K_vel = 150;
+	static double K_angulo = 25;
+	static double K_rate = 1.3;
+	static double K_pos = 700;
+	static double K_vel = 150;
 	
 	
 	public PID(Robot robot2) {
@@ -77,17 +77,17 @@ public class PID extends Equilibrio{
 	{
 		media_angulo = inicializar();
 		reloj.reset();
-		while (true) 
+		while (!robot.isStop()) 
 		{
 			double r = robot.rate(5);
 			rate = r - media_angulo; // (deg)
 			media_angulo = media_angulo*0.999 + (0.001*(rate + media_angulo));
 			angulo = angulo + rate*DT; // (deg/s)
 			
-			if(vel_ref < robot.getVelocidad()*10){
-				vel_ref = vel_ref + robot.getAceleracion()*10*DT;
+			if(vel_ref < robot.getVelocidad()*10.0){
+				vel_ref = vel_ref + robot.getAceleracion()*10.0*DT;
 			} else if(vel_ref > robot.getVelocidad()*10){
-				vel_ref = vel_ref - robot.getAceleracion()*10*DT;
+				vel_ref = vel_ref - robot.getAceleracion()*10.0*DT;
 			}
 			pos_ref = pos_ref + vel_ref*DT;
 			
@@ -99,6 +99,15 @@ public class PID extends Equilibrio{
 			double val_ant = historico.poll();
 			double deg_vel = (val - val_ant)/((N_max-1)*DT)*robot.getRADIO()*super.DEG2RAD;
 			vel = deg_vel*robot.getRADIO()*super.DEG2RAD;
+			
+			if (robot.getVelocidad() == 0) {
+				K_vel = 24;
+				K_pos = 700;
+			}
+			else {
+				K_vel = 62;
+				K_pos = 750;
+			}
 			
 			ganancia = K_angulo*angulo + K_rate*rate + K_pos*pos + K_vel*vel;
 			
@@ -113,21 +122,21 @@ public class PID extends Equilibrio{
 			
 			double sync_0 = 0;
 			double extra_pwr = 0;
-			if (robot.getAvance() == 0)
+			/*if (robot.getAvance() == 0) //TODO
 			{
 				if (avance_ant != 0) { sync_0 = valDer - valIzq;}
 				extra_pwr = (valDer - valIzq - sync_0)*(robot.getRADIO()*10); 
 			}
 			else {extra_pwr = (int)(robot.getAvance()/(robot.getRADIO()*10));}
-			avance_ant = robot.getAvance();
+			avance_ant = robot.getAvance();*/
 			
-			double power = out + extra_pwr;
+			double power = out + extra_pwr; //TODO rotacion
 			
 		    robot.avance(Robot.Motor.DERECHO, (int) power);
 		    robot.avance(Robot.Motor.IZQUIERDO, (int) power);
 		    vueltas++;
 		    
-			while(reloj.elapsed() < DT*1000) {
+			while(reloj.elapsed() < DT*1000.0) {
 				try {
 					Thread.sleep (1);
 				} catch (InterruptedException e1) {

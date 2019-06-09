@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RBCVersion>1.0.1</RBCVersion>
+
+<Platform>EV3</Platform>
+
+<CompilerMode>Real</CompilerMode>
+
+<MenuLevel>SuperUser</MenuLevel>
+
+<CompileAndDownload>NO</CompileAndDownload>
+
+<SourceFileName>NewProgram.c</SourceFileName>
+
+<NaturalLanguageFlag>True</NaturalLanguageFlag>
+
+<DebuggerWindows></DebuggerWindows>
+
+<SourceCode>#pragma config(Sensor, S4,     sonarSensor,    sensorEV3_Ultrasonic)
+#pragma config(Motor,  motorA,          rightMotor,    tmotorEV3_Large, openLoop, driveRight, encoder)
+#pragma config(Motor,  motorB,           ,             tmotorEV3_Large, openLoop)
+#pragma config(Motor,  motorC,          leftMotor,     tmotorEV3_Large, openLoop, driveLeft, encoder)
+#pragma config(Motor,  motorD,           ,             tmotorEV3_Large, openLoop)
+
+
+//librerias a emplear
+#include "hitechnic-compass.h"
+#include "hitechnic-gyro.h"
+#include "hitechnic-colour-v2.h"
+
+//creamos estructura para guardar el sensor compass y el sensor de color
+tHTMC compass;
+tHTCS2 colorSensor;
+tHTGYRO gyro;
+
+//constantes
+const float diametro = 42.0; //diametro de la rueda en mm
+const float radio = diametro / 2000 ; //en metros
+const float gra2rad = PI / 180.0;
+
+//variables globales
+int velocidad = 0;
+int aceleracion = 50;
+float rotacion = 0.0;
+float v = 0.0;
+float k = 0.0;
+float dt = 0.010;//tiempo de iteracion del bucle de control
+
+
+float kp_rot = 0.0;
+
+
+//Variables internas
+float g = 0.0; //lectura giroscopio
+float e = 0.0; //error
+float e_prev = 0.0; //error previo
+float e_rot = 0.0; //error rotacion
+float rot_prev =0.0;
+float de_dt = 0.0;//derivada del error (prevision)
+float iedt = 0.0;//integral del error (acumulacion)
+float u = 0.0; //senal de control del PID
+float u_rot = 0.0; //senal de control para la rotacion del movil
+float offset_gyro = 0.0; //offset inicial en gyro
+
+float xdes = 0.0; //error con la posicion de destino
+
+float of = 0.0; //angulo final objetivo
+
+//Estados
+int m = 0, mobs = 0, mobsback = 0, obsflag=0;
+
+float o = 0.0; //angulo en el sistema de referencia
+
+//Variables de estado
+float theta = 0.0; //angulo de inclinacion del pendulo
+float dtheta = 0.0; //velocidad angular de inclinacion
+float x = 0.0;	//posicion
+float dx = 0.0;	//velocidad
+
+//funciones
+float offset();
+
+
+task evitador() {
+
+while(true) {
+
+		//OBSTACULOS
+		float dist_obs = 0.0;	//distancia hasta el obstaculo
+
+
+			if (SensorValue[sonarSensor] &lt;= 12) {
+
+			//	xobs = xpos; //editar
+			//	yobs = ypos; //editar
+
+				velocidad = -10;
+
+
+				obsflag=1;
+			}
+
+				if ((obsflag ==1)&amp;&amp;(SensorValue[sonarSensor] &gt;= 20)){
+
+						velocidad = 0;
+
+						of= o + 1;
+
+						if (SensorValue[sonarSensor] &gt;= 30){
+
+						for (int i=0;i&lt;400;i++){
+						velocidad = 20;
+						of=0;
+						playSound(soundLowBuzz);
+
+						obsflag=0;  }}
+					}
+
+
+				}
+	}
+
+
+
+
+task main()
+{
+
+	//inicializamos sensores
+	resetMotorEncoder (motorA);
+	resetMotorEncoder (motorC);
+	//resetGyro(Gyro);
+
+	initSensor(&amp;compass, S2);
+	initSensor(&amp;colorSensor, S3);
+	initSensor(&amp;Gyro, S1);
+
+
+
+	//seteamos el offset del gyro
+	offset_gyro= offset();
+
+	//seteamos el angulo del sensor compass
+	readSensor(&amp;compass);
+	compass.offset = 0;
+	compass.relativeHeading = 0;
+	compass.offset = compass.heading;
+
+	playSound(soundBlip);
+	while(bSoundActive) sleep(1);
+
+	startTask(evitador);
+
+	//ganancias
+	float g_th = 0.0;
+	float g_dth = 0.0;
+	float g_x = 0.0;
+	float g_dx = 0.0;
+
+	//ganancias
+	float kp, ki, kd;
+
+	//matriz para los encoders
+	const int n_max = 7;
+	int n= 0, n_ant= 0, encoder[n_max];
+	memset(&amp;encoder[0], 0, sizeof(encoder)); //inicializamos el vector a 0
+
+	//Valores de las constantes
+
+	kp=0.00442;
+	ki=0.0481;
+	kd=0.000000190;
+
+	g_th = 26;
+	g_dth = 0.200;
+	g_x = 750;
+	g_dx = 24;
+
+
+	//Tarea de estabilidad
+
+	while (true) {
+
+		//lectura del giroscopio
+		g= SensorRaw[Gyro]; wait1Msec(2);
+		g= g + SensorRaw[Gyro];
+
+		//obtencion de la velocidad angular y angulo de inclinacion
+		dtheta=g/2.0 - offset_gyro;
+		offset_gyro = offset_gyro*0.999 + (0.001*(dtheta+offset_gyro));//actualizamos el valor del offset
+		theta = theta + dtheta*dt;
+		theta = theta*0.999-theta*0.001; //TODO?
+
+		//introducimos modelo de movimiento uniforme
+		if (v &lt; velocidad*10.0) v = v + aceleracion*10.0*dt;
+		else if (v &gt; velocidad*10.0) v = v - aceleracion*10.0*dt;
+		xdes =  xdes + v*dt;
+
+		//obtencion de la posicion y la velocidad lineal del movil
+		n++;
+		if (n==n_max) n=0;
+		encoder[n]= (nMotorEncoder(motorA) + nMotorEncoder(motorC) + xdes);
+		n_ant = n+1;
+		if (n_ant == n_max) n_ant = 0;
+
+		x = encoder[n]*radio*gra2rad;
+		dx = (encoder[n] - encoder [n_ant]) / (dt*(n_max-1.0))*radio*gra2rad;
+
+
+		//controlador PID //TODO?
+		if (velocidad == 0) {
+			g_dx = 24;
+			g_x = 700;
+		}
+		else {
+			g_dx = 62;
+			g_x = 750;
+		}
+
+
+		e= g_th*theta + g_dth*dtheta + g_x*x + g_dx*dx;
+		de_dt = (e - e_prev)/dt;
+		iedt = iedt + e*dt;
+		e_prev = e;
+		u = (kp*e + ki*iedt + kd*de_dt)/radio;
+		u_rot = rotacion/(radio); //TODO
+		rot_prev = rotacion; //TODO
+
+		motor[motorA] = u + u_rot;
+		motor[motorC] = u - u_rot;
+
+		//controlador de rotacion
+		if (m &lt; 100) {
+			e_rot = of - o;
+
+			//para buscar el menor sentido de giro
+			if (e_rot &gt; PI) e_rot = e_rot-(2*PI);
+			else if ( e_rot &lt; -PI) e_rot = e_rot + (2*PI);
+
+			//Constante Kp del controlador P
+			kp_rot = 6.0;
+			if(abs(e_rot) &gt; gra2rad*5) kp_rot = 0.4;
+			if(m == 10 || m == 20 || m == 30) kp_rot = 0.20;
+
+			rotacion = e_rot*kp_rot;
+		}
+
+		while (time1[T1] &lt; dt*1000.0) {
+			wait1Msec(1);
+		}
+
+		clearTimer(T1);
+		k++;
+
+		if (abs(theta) &gt; 60 || abs(u) &gt; 2000) stopAllTasks();
+
+	}
+}
+
+//definimos funcion offset para el calibrado del gyro
+float offset(){
+
+	float gyro_suma = 0.0;
+	int i, gyro_valor = 0;
+	float offset_gyro = 0.0;
+
+	//detenemos motores
+	setMotorSpeed(motorC, 0);
+	setMotorSpeed(motorA, 0);
+	sleep(500);
+
+	for (i=0; i&lt;40; i++) {
+		gyro_valor=SensorRaw(Gyro);
+		gyro_suma+=gyro_valor;
+		wait1Msec(50.0);
+	}
+
+	offset_gyro = gyro_suma/40;
+
+	wait1Msec(1000);
+	return(offset_gyro);
+}
+
+
+
+
+//variables globales
+
+
+
+int kobs = 0;
+
+int sonarflag = 0;
+int sonarflagback = 0;
+int indice = 0;
+
+float o1 = 0.0;
+
+
+
+
+
+
+float xobs = 0.0, yobs=0.0;//x e y de la posicion del obstaculo
+
+
+
+
+
+//valores matriz posicion en el plano
+
+float xpos = 50.0;  //posicion x en el sistema de referencia
+float ypos = 7.5;  //posicion y en el sistema de referencia
+
+</SourceCode>
