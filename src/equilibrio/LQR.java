@@ -26,14 +26,15 @@ public class LQR extends Equilibrio {
 	private static double out = 0;
 	private boolean iniciandose = true;
 
-	final double K_angulo = 15;
-	final double K_rate = 0.8;
-	final double K_pos = 0.12;///(robot.getRADIO()*super.DEG2RAD);
-	final double K_vel = 0.08;///(robot.getRADIO()*super.DEG2RAD);
-	/*final double K_angulo = 34.81;
-	final double K_rate = 3.11;
-	final double K_pos = 0.31;
-	final double K_vel = 1.35;*/
+	final double K_angulo = 21.6;
+	final double K_rate = 1.1520;
+	final double K_pos = 0.1728;
+	final double K_vel = 0.1152;
+	
+	/*final double K_angulo = 24.7326;
+	final double K_rate = 8.1376;
+	final double K_pos = 0.1000;
+	final double K_vel = 0.6457;*/
 	
 	Stopwatch reloj = new Stopwatch();
 	int vueltas = 0;
@@ -92,22 +93,20 @@ public class LQR extends Equilibrio {
 			double motorIzq = robot.encoder(Motor.IZQUIERDO);
 			sum = motorDer + motorIzq;
 			val = sum - antPos;
-			pos = (pos + val);//*robot.getRADIO()*super.DEG2RAD;
+			pos = (pos + val);
 			
 			historico[cont] = val;
 			cont = (cont + 1) % N_max;
 			vel = (historico[0] + historico[1] + historico[2] + historico[3])/(N_max*dt);
-			pos -= robot.getVelocidad();
+			pos -= robot.getAvance();
 			
 			out = K_angulo*angulo + K_rate*rate + K_pos*pos + K_vel*vel;
-			//robot.print(dt + "");
 
 			if (out > 100) out = 100;
 			if (out < -100) out = -100;
 			if (!iniciandose){
 				robot.avance(Motor.DERECHO, (int) (out - robot.getDireccion()));
 				robot.avance(Motor.IZQUIERDO, (int) (out + robot.getDireccion()));
-				//robot.print("avance = " + out);
 			}
 
 			Delay.msDelay(10);

@@ -4,22 +4,22 @@ clear
 close all
 
 %% Parametros
-M = 0.622; % masa del carro
-m = 0.46; % masa del pendulo
+M = 0.7; % masa del carro
+m = 0.027; % masa del pendulo
 g = 9.81; % gravedad
 L = 0.145; % longitud del pendulo
 b = 0.1; % friccion del carro
-I = (M*L^2)/3; % friccion en la union
+I = 0.09;%(M*L^2)/3; % friccion en la union
 
 %% Constantes
-K1 = 15; % parametro del angulo
-K2 = 0.8; % parametro de la velocidad angular
-K3 = 0.12; % parametro de la posicion
-K4 = 0.08; % parametro de la velocidad
+K_angulo = 15; % parametro del angulo
+K_rate = 0.8; % parametro de la velocidad angular
+K_pos = 0.12; % parametro de la posicion
+K_vel = 0.08; % parametro de la velocidad
 
-Kp = 1.2; 
-Ki = 0.25;
-Kd = 0.1;
+Kp = 1.5; 
+Ki = 0.5;
+Kd = 0.005;
 
 
 %% Matrices
@@ -31,9 +31,10 @@ A = [             0, 1, 0,                   0;
  
 B = [0; -M*L/p; 0; (I+M*L^2)/p];
 
-K = [K1; K2; K3; K4];
+K0 = [K_angulo; K_rate; K_pos; K_vel];
 LQR = [-25.6476, -1.3224, -0.1, -0.7695];
 Q = [50 0 0 0; 0 1 0 0; 0 0 50 0; 0 0 0 1];
+R = 1;
  
 %% Output 
 C = [0,0,1,0;

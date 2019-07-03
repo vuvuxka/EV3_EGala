@@ -9,7 +9,7 @@ import lejos.robotics.EncoderMotor;
 import lejos.utility.Stopwatch;
 
 /**
- * Segway using PID control in RobotC
+ * Segway using PID_old control in RobotC
  */
 /* LEGO MINDSTORMS NXT Segway program driver
 Author: Laurens Valk (robotsquare.com)
@@ -33,7 +33,7 @@ Version history:
                           - Conditional compilation: Only code for your sensor gets compiles. This requires
                             different set up in the sample programs. For more, just see the tutorial.
 - v0.98 20 March    2012: - You can now use the code with a Segway with gearing down between wheels
-                          - Both supported sensors now use same PID private static finalants
+                          - Both supported sensors now use same PID_old private static finalants
                           - Added section at the beginning of the code for user adjustable settings
 - v0.97 07 March    2012: - Loop cycle now uses timer to determine cycle length.
                           - Motor encoder speed is now really defined as degrees per second.
@@ -107,7 +107,7 @@ public class Segway
 	// Default is 0.010 seconds (10 miliseconds).
 	private final static float dt = 0.010f; // 0.003/0.005 good, 0.010 not bad, 0.02 not good
 
-	// Customize PID private static finalants. These variables are global, so you can optionally dynamically change them in your main task.
+	// Customize PID_old private static finalants. These variables are global, so you can optionally dynamically change them in your main task.
 	// (0.01, 0.05, 0.0001) good
 	// (0.01, 0.05, 0.0005) no good
 	private final static float kp = 0.01f;		// [0.01,0.1], default 0.0336
@@ -154,7 +154,7 @@ public class Segway
 			de_dt = 0,//dError/dt     // Change of above error
 			_edt = 0,//Integral Error // Accumulated error in time
 			e_prev = 0;//Previous Error/ Error found in previous loop cycle
-	float pid = 0;                  // SUM OF PID CALCULATION
+	float pid = 0;                  // SUM OF PID_old CALCULATION
 	float y = 0,//y                     // Measured Motor position (degrees)
 			dy_dt = 0,//dy/dt             // Measured motor velocity (degrees/sec)
 			v = 0,//velocity          // Desired motor velocity (degrees/sec)
@@ -268,7 +268,7 @@ public class Segway
 				y = encoder[n]*degtorad*radius/gear_down_ratio;
 				dy_dt = (encoder[n] - encoder[n_comp])/(dt*(n_max-1))*degtorad*radius/gear_down_ratio;
 
-				//COMPUTE COMBINED ERROR AND PID VALUES
+				//COMPUTE COMBINED ERROR AND PID_old VALUES
 				e = gn_th * th + gn_dth_dt * dth_dt + gn_y * y + gn_dy_dt * dy_dt;
 				de_dt = (e - e_prev)/dt;
 				_edt = _edt + e*dt;
