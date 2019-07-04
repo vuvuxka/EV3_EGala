@@ -23,7 +23,7 @@ public class Robot {
 	private boolean stop;
 	private int contador;
 	
-	final double DIAMETRO = 56; // (milimetros)
+	final double DIAMETRO = 42; // (milimetros)
 	private final double RADIO = DIAMETRO/(2*1000); // (metros)
 	
 	/* PUERTOS ASIGNADOS Y SENSORES */

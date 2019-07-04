@@ -13,7 +13,7 @@ import main.Robot.Motor;
 
 public class LQR extends Equilibrio {
 
-	final static int N_max = 4; // tamaño maximo del array de historico de posiciones
+	final static int N_max = 7; // tamaño maximo del array de historico de posiciones
 
 	private double historico[] = {0,0,0,0};
 	private int cont = 0;

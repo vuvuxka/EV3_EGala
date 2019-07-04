@@ -113,7 +113,7 @@ public class PID extends Equilibrio {
 			error_d = (error_p - error_0)/dt;
 			error_0 = ganancia; 
 			
-			out = error_p*K_p + error_d*K_d + error_i*K_i;
+			out = (error_p*K_p + error_d*K_d + error_i*K_i)/robot.getRADIO();
 
 			if (out > 100) out = 100;
 			if (out < -100) out = -100;
