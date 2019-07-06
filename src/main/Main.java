@@ -16,16 +16,13 @@ public class Main {
 			Thread t1 = new Thread(eq);
 			t1.start();
 			
-			//TODO comportamiento del bicho
-			robot.setAvance(0);
-			robot.setVelocidad(0);
-			/*Thread.sleep(7000);
+			robot.setPos_relativa(0);
+			robot.setDireccion(0);
+			Thread.sleep(7000);
 			
-			Sound.playTone(440,500);
-			robot.setAvance(20);
-			
-			Sound.playTone(440,500);
-			robot.setAvance(-20);*/
+			Sound.playTone(440,800);
+			robot.setVelocidad(60); //velocidad Maxima
+			robot.setDireccion(0);
 			
 			t1.join();
 			

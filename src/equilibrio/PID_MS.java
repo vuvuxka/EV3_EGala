@@ -35,9 +35,9 @@ public class PID_MS extends Equilibrio{
 	private static double error_cont = 0;
 	
 	private static int vueltas = 0;
-	private static double avance_ant = 0;
+	private static double dir_ant = 0;
 	
-	final static double Kp = 0.6;
+	final static double Kp = 0.4;
 	final static double Ki = 14;
 	final static double Kd = 0.005;
 
@@ -96,31 +96,32 @@ public class PID_MS extends Equilibrio{
 			vel = deg_vel*robot.getRADIO()*super.DEG2RAD; //(metros/s)
 			pos = val*super.DEG2RAD*robot.getRADIO(); //(metros)
 			
-			ganancia = K_angulo*angulo + K_rate*rate + K_pos*(pos-pos_ref) + K_vel*vel;
+			ganancia = K_angulo*angulo + K_rate*rate + K_pos*(pos+pos_ref) + K_vel*vel;
 			
 			error_p = ganancia - 0;
 			error_i = error_i + error_p*DT;
 			error_d = (error_p - error_0)/DT;
-			//error_0 = ganancia;  //TODO??
+			error_0 = ganancia;  
 			
 			out = error_p*Kp + error_d*Kd + error_i*Ki;
 			
 			// TODO GESTION DE ERRORES
-			double avance = Math.min(50, Math.max(-50, robot.getAvance()));
-			double sync_0 = 0;
-			double extra_pwr = 0;
-			/*if (avance == 0) //TODO
-			{
-				if (avance_ant != 0) { sync_0 = valDer - valIzq;}
-				extra_pwr = (valDer - valIzq - sync_0)*(0.05); 
+			double sync_0 = 0, extra = 0;
+			double direccion = Math.max(-50, Math.min(50,robot.getDireccion()));
+			double correcion = valIzq - valDer;
+			/*if (direccion == 0) {
+		        if (dir_ant != 0) sync_0 = valDer - valIzq;
+		        extra = (valDer - valIzq - sync_0)*0.05;
 			}
-			else {extra_pwr = (int)(robot.getAvance()/(0.05));}*/
-			avance_ant = avance;
+			else {*/
+				extra = (direccion-correcion)*-0.5;
+			//}
+			dir_ant = direccion;
+			//robot.print(direccion + " " + sync_0 + " " + extra);
 			
-			double powerD = out + extra_pwr;
-			double powerI = out - extra_pwr;
+			double powerD = out + extra;
+			double powerI = out - extra;
 			
-			//robot.print(powerD + " " + powerI);
 			
 		    robot.avance(Robot.Motor.DERECHO, (int) Math.max(-100, Math.min(powerD*0.021/robot.getRADIO(), 100)));
 		    robot.avance(Robot.Motor.IZQUIERDO, (int) Math.max(-100, Math.min(powerI*0.021/robot.getRADIO(), 100)));

@@ -35,11 +35,11 @@ public class Robot {
 	private final static Port MOTOR_IZQUIERDO = MotorPort.D;
 	private final static int MAX_SPEED = 900;
 	
-	private EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
-	private SampleProvider gyroReader = gyroSensor.getRateMode();
-	private static EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
+	private final EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
+	private final SampleProvider gyroReader = gyroSensor.getRateMode();
+	private final EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
 	//private static EV3GyroSensor colorSensor = new EV3GyroSensor(COLOR);
-	//private static EV3GyroSensor infraSensor = new EV3GyroSensor(INFRARROJOS);
+	private final EV3IRSensor infraSensor = new EV3IRSensor(INFRARROJOS);
 	GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
 	
 	private static EncoderMotor mDer = new UnregulatedMotor(MOTOR_DERECHO);
@@ -49,9 +49,8 @@ public class Robot {
 	public Robot(String name) throws InterruptedException {
 		this.name = name;
 		this.gyroSensor.reset();
-		this.pos_relativa = 0;
+		this.setPos_relativa(0);
 		this.setVelocidad(0);
-		this.setAvance(0);
 		this.contador = 0;
 		this.pantalla.clear();
 		this.stop = false;
@@ -124,9 +123,17 @@ public class Robot {
 		return (sample[0] == 1);
 	}
 	
+	public int distancia()
+	{
+		SampleProvider IRreader = infraSensor.getDistanceMode();
+		float [] sample = new float[IRreader.sampleSize()];
+		IRreader.fetchSample(sample, 0);
+	    return (int) sample[0];
+	}
+	
 	public void print(String s)
 	{
-		this.pantalla.setFont(Font.getSmallFont());
+		//this.pantalla.setFont(Font.getSmallFont());
 		System.out.println(s);
 	}
 	
@@ -147,29 +154,10 @@ public class Robot {
 		this.velocidad = velocidad;
 	}
 
-	public double getAceleracion()
-	{
-		return aceleracion;
-	}
-
-	public void setAceleracion(double aceleracion)
-	{
-		this.aceleracion = aceleracion;
-	}
 
 	public double getRADIO()
 	{
 		return RADIO;
-	}
-
-	public double getAvance()
-	{
-		return avance;
-	}
-
-	public void setAvance(double avance)
-	{
-		this.avance = avance;
 	}
 
 	public double getDireccion()
@@ -182,12 +170,36 @@ public class Robot {
 		this.direccion = direccion;
 	}
 
+	public double getAvance() {
+		return avance;
+	}
+
+	public void setAvance(double avance) {
+		this.avance = avance;
+	}
+
+	public double getAceleracion() {
+		return aceleracion;
+	}
+
+	public void setAceleracion(double aceleracion) {
+		this.aceleracion = aceleracion;
+	}
+
 	public boolean isStop() {
 		return stop || presionado();
 	}
 
 	public void setStop(boolean stop) {
 		this.stop = stop;
+	}
+
+	public double getPos_relativa() {
+		return pos_relativa;
+	}
+
+	public void setPos_relativa(double pos_relativa) {
+		this.pos_relativa = pos_relativa;
 	}
 	
 }
