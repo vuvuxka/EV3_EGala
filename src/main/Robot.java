@@ -30,17 +30,19 @@ public class Robot {
 	private final static Port PRESION = SensorPort.S1;
 	private final static Port GIROSCOPIO = SensorPort.S2;
 	private final static Port COLOR = SensorPort.S3;
-	private final static Port INFRARROJOS = SensorPort.S4;
+	private final static Port ULTRASONIDO = SensorPort.S4;
 	private final static Port MOTOR_DERECHO = MotorPort.A;
 	private final static Port MOTOR_IZQUIERDO = MotorPort.D;
-	private final static int MAX_SPEED = 900;
 	
 	private final EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
-	private final SampleProvider gyroReader = gyroSensor.getRateMode();
+	private final SampleProvider gyroRate = gyroSensor.getRateMode();
+	private final SampleProvider gyroAng = gyroSensor.getAngleMode();
 	private final EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
+	private final GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
 	//private static EV3GyroSensor colorSensor = new EV3GyroSensor(COLOR);
-	private final EV3IRSensor infraSensor = new EV3IRSensor(INFRARROJOS);
-	GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
+	private final EV3UltrasonicSensor ultraSensor = new EV3UltrasonicSensor(ULTRASONIDO);
+	private final SampleProvider USreader = ultraSensor.getDistanceMode();
+	
 	
 	private static EncoderMotor mDer = new UnregulatedMotor(MOTOR_DERECHO);
 	private static EncoderMotor mIzq = new UnregulatedMotor(MOTOR_IZQUIERDO);
@@ -80,7 +82,7 @@ public class Robot {
 		float[] sample = {0};
 		for(int i = 0; i < vueltas; i++)
 		{
-			this.gyroReader.fetchSample(sample, 0);
+			this.gyroRate.fetchSample(sample, 0);
 			media = media + sample[0];
 			try{ Thread.sleep(2);} catch(Exception e) {}
 		}
@@ -90,7 +92,7 @@ public class Robot {
 	public double angle()
 	{
 		float[] sample = {0};
-		this.gyroSensor.getAngleMode().fetchSample(sample, 0);
+		gyroAng.fetchSample(sample, 0);
 		return sample[0];
 	}
 
@@ -115,7 +117,7 @@ public class Robot {
 		
 	}
 	
-	public boolean presionado()
+	public boolean presionado() // TODO Listener del boton?
 	{
 		SensorMode presion = presionSensor.getTouchMode();
 		float sample[] = {0};
@@ -123,12 +125,11 @@ public class Robot {
 		return (sample[0] == 1);
 	}
 	
-	public int distancia()
+	public double distancia()
 	{
-		SampleProvider IRreader = infraSensor.getDistanceMode();
-		float [] sample = new float[IRreader.sampleSize()];
-		IRreader.fetchSample(sample, 0);
-	    return (int) sample[0];
+		float [] sample = new float[USreader.sampleSize()];
+		USreader.fetchSample(sample, 0);
+	    return sample[0];
 	}
 	
 	public void print(String s)
@@ -200,6 +201,12 @@ public class Robot {
 
 	public void setPos_relativa(double pos_relativa) {
 		this.pos_relativa = pos_relativa;
+	}
+
+	public void quit() {
+		gyroSensor.close();
+		presionSensor.close();
+		ultraSensor.close();
 	}
 	
 }

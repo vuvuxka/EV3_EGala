@@ -50,7 +50,7 @@ public class LQR extends Equilibrio {
 	    double g = 0;
 	    double m = 0;
 		try {
-			Sound.playTone(super.freq,100);
+			Sound.playTone(super.freq, 100, 30);
 			Thread.sleep(100);
 		    robot.reset();
 		    for (int i = 0; i < 20; i++)
@@ -60,9 +60,9 @@ public class LQR extends Equilibrio {
 		    }
 		    m = g/20;
 		    Thread.sleep(100);
-		    Sound.playTone(super.freq,100);
+		    Sound.playTone(super.freq, 100, 30);
 		    Thread.sleep(100);
-		    Sound.playTone(super.freq,100);
+		    Sound.playTone(super.freq, 100, 30);
 		}
 		catch(Exception e) {}
 	    return m;

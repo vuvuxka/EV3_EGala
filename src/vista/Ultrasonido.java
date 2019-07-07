@@ -3,11 +3,11 @@ package vista;
 import lejos.hardware.Sound;
 import main.Robot;
 
-public class Infrarrojo implements Runnable{
+public class Ultrasonido implements Runnable{
 	
 	protected Robot robot;
 
-	public Infrarrojo(Robot robot) {
+	public Ultrasonido(Robot robot) {
 		super();
 		this.robot = robot;
 	}
@@ -15,10 +15,10 @@ public class Infrarrojo implements Runnable{
 	public void run() {
 		while(!robot.presionado())
 		{
-			int distancia = robot.distancia();
-			Sound.playTone(440,300);
+			double distancia = robot.distancia();
+			if (distancia < 0.5) Sound.playTone(250,300,5);
 			try {
-				Thread.sleep(distancia*10);
+				Thread.sleep((int) (distancia*distancia*1000));
 			} catch (InterruptedException e) {}
 		}
 		
