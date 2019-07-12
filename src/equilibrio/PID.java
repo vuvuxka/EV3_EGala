@@ -5,7 +5,6 @@ import java.util.*;
 import lejos.hardware.*;
 import lejos.utility.Stopwatch;
 import main.Robot;
-import main.Robot.Motor;
 
 public class PID extends Equilibrio{
 
@@ -107,18 +106,18 @@ public class PID extends Equilibrio{
 			out = error_p*Kp + error_d*Kd + error_i*Ki;
 			
 			// TODO GESTION DE ERRORES
-			double sync_0 = 0, extra = 0;
-			double direccion = Math.max(-50, Math.min(50,robot.getDireccion()));
-			double correcion = valIzq - valDer;
-			/*if (direccion == 0) {
-		        if (dir_ant != 0) sync_0 = valDer - valIzq;
-		        extra = (valDer - valIzq - sync_0)*0.05;
+			
+			double extra = 0;
+			double direccion = Math.max(-50, Math.min(50, robot.getDireccion())); // Limite 50?
+			double correcion = 0;
+			if (direccion == 0)
+			{
+				if (dir_ant != 0) correcion = valIzq - valDer;
+				extra = (valIzq - valDer - correcion)*0.05;
 			}
-			else {*/
-				extra = (direccion-correcion)*-0.5;
-			//}
+			else extra = direccion*-0.5;
+
 			dir_ant = direccion;
-			//robot.print(direccion + " " + sync_0 + " " + extra);
 			
 			double powerD = out + extra;
 			double powerI = out - extra;

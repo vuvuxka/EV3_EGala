@@ -25,8 +25,8 @@ public class Main {
 			Thread.sleep(7000);
 			
 			Sound.playTone(440,800,30);
-			robot.setVelocidad(50); //velocidad Maxima
-			for(int i = 0; i < 5; i++) {robot.setDireccion(i*10); Thread.sleep(500); }
+			robot.setDireccion(-10);
+			Thread.sleep(7000);
 			
 			tEqu.join();
 			tDis.join();
