@@ -8,7 +8,6 @@ import lejos.hardware.port.*;
 import lejos.hardware.sensor.*;
 import lejos.robotics.EncoderMotor;
 import lejos.robotics.SampleProvider;
-import lejos.hardware.lcd.Font;
 
 // Clase del Robot
 
@@ -21,10 +20,9 @@ public class Robot {
 	private double avance;
 	private double direccion;
 	private boolean stop;
-	private int contador;
 	
 	final double DIAMETRO = 42; // (milimetros)
-	private final double RADIO = DIAMETRO/(2*1000); // (metros)
+	private final double RADIO = DIAMETRO/(2*1000); // (0.021 metros)
 	
 	/* PUERTOS ASIGNADOS Y SENSORES */
 	private final static Port PRESION = SensorPort.S1;
@@ -53,11 +51,19 @@ public class Robot {
 		this.gyroSensor.reset();
 		this.setPos_relativa(0);
 		this.setVelocidad(0);
-		this.contador = 0;
+		this.setAvance(0);
 		this.pantalla.clear();
 		this.stop = false;
 		mDer.resetTachoCount();
 		mIzq.resetTachoCount();
+		Button.ESCAPE.addKeyListener(new KeyListener() {
+			public void keyPressed(Key k) {
+				stop = true;				
+			}
+			public void keyReleased(Key k) {
+				
+			}
+		      });
 	}
 
 	public String toString() 
@@ -76,7 +82,7 @@ public class Robot {
 		
 	}
 
-	public double rate(int vueltas)
+	public double rate(int vueltas) // Grados
 	{
 		double media = 0;
 		float[] sample = {0};
@@ -84,9 +90,9 @@ public class Robot {
 		{
 			this.gyroRate.fetchSample(sample, 0);
 			media = media + sample[0];
-			try{ Thread.sleep(2);} catch(Exception e) {}
+			try{Thread.sleep(2);} catch(Exception e) {}
 		}
-		return - media/vueltas; //TODO Con negativo?
+		return - media/vueltas;
 	}
 	
 	public double angle()
@@ -115,14 +121,6 @@ public class Robot {
 			default: 							break;
 		}
 		
-	}
-	
-	public boolean presionado() // TODO Listener del boton?
-	{
-		SensorMode presion = presionSensor.getTouchMode();
-		float sample[] = {0};
-		presion.fetchSample(sample, 0);
-		return (sample[0] == 1);
 	}
 	
 	public double distancia()
@@ -188,7 +186,7 @@ public class Robot {
 	}
 
 	public boolean isStop() {
-		return stop || presionado();
+		return stop;
 	}
 
 	public void setStop(boolean stop) {

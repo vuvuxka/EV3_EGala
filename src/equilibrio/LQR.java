@@ -1,11 +1,6 @@
 package equilibrio;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Queue;
-
 import lejos.hardware.Sound;
-import lejos.robotics.SampleProvider;
 import lejos.utility.Delay;
 import lejos.utility.Stopwatch;
 import main.Robot;
@@ -13,13 +8,14 @@ import main.Robot.Motor;
 
 public class LQR extends Equilibrio {
 
-	final static int N_max = 7; // tamaño maximo del array de historico de posiciones
+	final static int N_max = 4;
 
 	private double historico[] = {0,0,0,0};
 	private int cont = 0;
 	private double vel = 0;
 	private double pos = 0;
 	private double pos_ref = 0;
+	private double vel_ref = 0;
 	private double rate = 0;
 	private double angulo = 0;
 	
@@ -30,11 +26,6 @@ public class LQR extends Equilibrio {
 	final double K_rate = 1.1520;
 	final double K_pos = 0.1728;
 	final double K_vel = 0.1152;
-	
-	/*final double K_angulo = 24.7326;
-	final double K_rate = 8.1376;
-	final double K_pos = 0.1000;
-	final double K_vel = 0.6457;*/
 	
 	Stopwatch reloj = new Stopwatch();
 	int vueltas = 0;
@@ -74,7 +65,6 @@ public class LQR extends Equilibrio {
 		angulo = inicializar();
 		System.out.println("ini = " + angulo);
 		long ant_dt = System.nanoTime();
-		//Delay.msDelay(10);
 		double sum = 0, val = 0;
 		Thread.currentThread().setPriority(10);
 		
@@ -95,12 +85,14 @@ public class LQR extends Equilibrio {
 			val = sum - antPos;
 			pos = (pos + val);
 			
+			vel_ref = Math.max(-50, Math.min(50,robot.getVelocidad()));
+			pos_ref = pos_ref + vel_ref*dt*0.002;
 			historico[cont] = val;
 			cont = (cont + 1) % N_max;
 			vel = (historico[0] + historico[1] + historico[2] + historico[3])/(N_max*dt);
-			pos -= robot.getAvance();
+
 			
-			out = K_angulo*angulo + K_rate*rate + K_pos*pos + K_vel*vel;
+			out = K_angulo*angulo + K_rate*rate + K_pos*(pos + pos_ref) + K_vel*vel;
 
 			if (out > 100) out = 100;
 			if (out < -100) out = -100;

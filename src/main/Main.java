@@ -1,7 +1,7 @@
 package main;
 
+import control.*;
 import equilibrio.*;
-import lejos.hardware.Sound;
 import vista.Ultrasonido;
 
 public class Main {
@@ -11,23 +11,16 @@ public class Main {
 		try {
 			//*
 			robot = new Robot("Robot Segway");
-			Equilibrio eq = new PID(robot);
-			//*/
-			//GyroBoy eq = new GyroBoy();
+			//Equilibrio eq = new PID(robot);
+			Equilibrio eq = new LQR(robot);
 			Thread tEqu = new Thread(eq);
 			Thread tDis = new Thread(new Ultrasonido(robot));
 			tEqu.start();
 			Thread.sleep(2000);
 			tDis.start();
 			
-			robot.setPos_relativa(0);
-			robot.setDireccion(0);
-			Thread.sleep(7000);
-			
-			Sound.playTone(440,800,30);
-			robot.setDireccion(-10);
-			Thread.sleep(7000);
-			
+			Control c = new Simple(robot);
+			//c.ejecutar();
 			tEqu.join();
 			tDis.join();
 			robot.quit();

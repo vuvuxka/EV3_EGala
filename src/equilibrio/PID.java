@@ -98,10 +98,10 @@ public class PID extends Equilibrio{
 			
 			ganancia = K_angulo*angulo + K_rate*rate + K_pos*(pos+pos_ref) + K_vel*vel;
 			
-			error_p = ganancia - 0;
+			error_p = ganancia;
 			error_i = error_i + error_p*DT;
 			error_d = (error_p - error_0)/DT;
-			error_0 = ganancia;  
+			error_0 = ganancia;
 			
 			out = error_p*Kp + error_d*Kd + error_i*Ki;
 			

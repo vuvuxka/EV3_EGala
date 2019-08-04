@@ -13,7 +13,7 @@ public class Ultrasonido implements Runnable{
 	}
 
 	public void run() {
-		while(!robot.presionado())
+		while(!robot.isStop())
 		{
 			double distancia = robot.distancia();
 			if (distancia < 0.5) Sound.playTone(250,300,5);
