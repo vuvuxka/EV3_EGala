@@ -8,10 +8,9 @@ M = 0.7; % masa del carro
 m = 0.027; % masa del pendulo
 g = 9.81; % gravedad
 L = 0.145; % longitud del pendulo
-b = 0.1; % friccion del carro
+k = 0.1; % friccion del carro
 I = 0.09;%(M*L^2)/3; % friccion en la union
-deg2rad = pi / 180;
-radio = 42 / (2*1000);
+radio = 42/(2*1000);
 
 %% Constantes
 K_angulo = 25; % parametro del angulo
@@ -23,22 +22,28 @@ Kp = 0.4;
 Ki = 14;
 Kd = 0.005;
 
+deg2rad = pi / 180;
+rad2deg = 1/deg2rad;
+rad2m = radio;
+m2rad = 1/rad2m;
 
-%% Matrices
-p = I*(M + m) + M*m*L^2;
+%% Matrices 
+%% obtiene los ángulos en rad y el desplazamiento en metros
+p1 = (M+m)/(I*(M+m)+L^2*m*M);
+p2 = (I+L^2*m)/(I*(M+m+L^2*m*M));
 A = [             0, 1, 0,                   0;
-     M*g*L*(M + m)/p, 0, 0,             M*L*b/p;
+     L*m*g*p1, 0, 0,             (L*m*k*p1)/(M+m);
                   0, 0, 0,                   1;
-       -g*M^2*L^2/p, 0, 0,     -b*(I + M*L^2)/p];
+       (-(L*m)^2*g*p2)/(I+L^2*m), 0, 0,     -k*p2];
  
-B = [0; -M*L/p; 0; (I+M*L^2)/p];
+B = [0; (-L*m*p1)/(M+m); 0; p2];
+
+T1 = diag([deg2rad; deg2rad; 1; 1]); % cambio del controlador al del modelo
+
+T2 = diag([rad2deg; rad2deg; 1; 1]); % cambio del modelo al controlador 
 
 K = [K_angulo; K_rate; K_pos; K_vel];
- 
+
 %% Systema
-% sys = ss(A,B,C',D);
-x0 = [0.2; 0; 0; 0]; % empieza quieto y girado 5 grados
- 
- 
- 
+x0 = [5*deg2rad; 0; 0; 0]; % empieza quieto y girado 5 grados
  

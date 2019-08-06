@@ -74,13 +74,13 @@ public class LQR extends Equilibrio {
 			double dt = (ahora - ant_dt) / 1000000000.0;	// Time step in seconds
 			ant_dt = ahora;
 			
-			rate = robot.rate(1);
-			angulo = angulo + (rate * dt);
+			rate = robot.rate(1); // (deg)
+			angulo = angulo + (rate * dt); // (deg/s)
 			
 		
 			double antPos = sum;
-			double motorDer = robot.encoder(Motor.DERECHO);
-			double motorIzq = robot.encoder(Motor.IZQUIERDO);
+			double motorDer = robot.encoder(Motor.DERECHO); // (rad)
+			double motorIzq = robot.encoder(Motor.IZQUIERDO); // (rad)
 			sum = motorDer + motorIzq;
 			val = sum - antPos;
 			pos = (pos + val);
@@ -89,7 +89,7 @@ public class LQR extends Equilibrio {
 			pos_ref = pos_ref + vel_ref*dt*0.002;
 			historico[cont] = val;
 			cont = (cont + 1) % N_max;
-			vel = (historico[0] + historico[1] + historico[2] + historico[3])/(N_max*dt);
+			vel = (historico[0] + historico[1] + historico[2] + historico[3])/(N_max*dt); // (rad/s)
 
 			
 			out = K_angulo*angulo + K_rate*rate + K_pos*(pos + pos_ref) + K_vel*vel;

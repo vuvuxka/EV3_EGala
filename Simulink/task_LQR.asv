@@ -36,7 +36,7 @@ B = [0; (-L*m*p1)/(M+m); 0; p2];
 
 T1 = diag([deg2rad; deg2rad; rad2m; rad2m]); % cambio del controlador al del modelo
 
-T2 = diag([rad2deg; rad2deg; m2rad; m2rad]); % cambio del modelo al controlador 
+T2 = diag([rad2deg; rad2deg; m2rad; m2rad]; % cambio del modelo al controlador 
 
 K = [K_angulo; K_rate; K_pos; K_vel];
 
