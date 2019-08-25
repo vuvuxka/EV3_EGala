@@ -1,7 +1,7 @@
 package control;
 
-import lejos.hardware.Sound;
 import main.Robot;
+import main.Robot.Imagenes;
 
 public class Simple implements Control {
 	Robot robot;
@@ -12,13 +12,22 @@ public class Simple implements Control {
 	}
 
 	public void ejecutar() throws InterruptedException {
-		robot.setPos_relativa(0);
+		/*final GraphicsLCD lcd = robot.getPantalla();
+        try {
+            final Image image = Image.createImage(new BufferedInputStream(new FileInputStream("images/todo.jpg")));
+            lcd.drawImage(image, 40, 10, 0);
+            lcd.refresh();
+        }catch (IOException e){
+            robot.print("ERROR");
+        }*/
 		robot.setDireccion(0);
-		Thread.sleep(7000);
-		
-		Sound.playTone(440,800,30);
-		robot.setDireccion(-10);
-		Thread.sleep(7000);
+		robot.setVelocidad(10);
+		robot.cara(Imagenes.Emocion.NEUTRO);
+		Thread.sleep(1000);
+		robot.cara(Imagenes.Emocion.ENFADADO);
+		Thread.sleep(1000);
+		robot.cara(Imagenes.Emocion.ERROR);
+		Thread.sleep(10000);
 		
 	}
 
