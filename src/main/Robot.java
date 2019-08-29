@@ -107,7 +107,7 @@ public class Robot {
 		{
 			case DERECHO: mDer.flt(); 		break;
 			case IZQUIERDO: mIzq.flt(); 	break;
-			default:  						break;
+			default: mDer.flt(); mIzq.flt();break;
 		}
 	}
 

@@ -13,7 +13,7 @@ I = 0.006;%(M*L^2)/3; % friccion en la union
 radio = 42/(2*1000);
 
 %% Sistema
-%% todas las unidades de salida estan en radianes 
+% todas las unidades de salida estan en radianes 
 p = I*(M+m)+M*m*L^2;
 A = [0      1              0           0;
      0 -(I+m*L^2)*k/p  (m^2*g*L^2)/p   0;
@@ -27,13 +27,15 @@ C = [0 0 1 0; 0 0 0 1; 1 0 0 0; 0 1 0 0];
 
 D = zeros(4,1);
 
+
+
 x0 = [0; 0; 0.2; 0]; % empieza quieto y girado 5 grados
 
 %% LQR
-Q = [  1   0   0  0;
-       0   0   0  0;
-       0   0   1  0;
-       0   0   0  0];
+Q = [ 50   0   0  0;
+       0   1   0  0;
+       0   0 500  0;
+       0   0   0  1];
 R = 1;
 K = lqr(A,B,Q,R);
 K = K*C

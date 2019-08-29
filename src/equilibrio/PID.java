@@ -105,8 +105,25 @@ public class PID extends Equilibrio{
 			
 			out = error_p*Kp + error_d*Kd + error_i*Ki;
 			
-			// TODO GESTION DE ERRORES
+			nowError = (Math.abs(out) > 100);
+			if (nowError & preError) error_cont++;
+			else error_cont = 0;
 			
+			if (error_cont > 20)
+			{
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				robot.stop(null);
+				Sound.playTone(800,100);
+				Sound.playTone(600,100);
+				Sound.playTone(300,100);
+		        robot.setStop(true);
+			}
+			else  preError = nowError;
+
 			double extra = 0;
 			double direccion = Math.max(-50, Math.min(50, robot.getDireccion())); // Limite 50?
 			double correcion = 0;
