@@ -1,23 +1,14 @@
 package vista;
 
-import lejos.hardware.Sound;
 import main.Robot;
+import main.Robot.Motor;
 
 public class Evitador implements Runnable{
 	
 	protected Robot robot;
-	private final double DisCritica = 0.2; 
-	private final double DisOK = 0.4;
+	private final double DisCritica = 0.3; 
+	//private final double DisOK = 0.4;
 	
-	private int SupergiroD = 20;
-	private int SupergiroI = -20;
-	private int GiroD = 10;
-	private int GiroI = -10;
-	private int Recto = 0;
-	private double Rapido = 40;
-	private double VelFront = 20;
-	private double VelAtras = -10;
-	private boolean ultDer = true;
 	public int historico = 0;
 
 
@@ -33,38 +24,38 @@ public class Evitador implements Runnable{
 			double dist = robot.distancia();
 			double dir = robot.getDireccion();
 			double vel = robot.getVelocidad();
-			try{
-				if (dist < DisCritica) 
+			if (dist < DisCritica) 
+			{
+				robot.sonido(100, 50);
+				robot.sonido(100, 50);
+				robot.setEvitando(true);
+				try
 				{
-					 Sound.twoBeeps();
-	
-					 if(historico / 3 == 0) robot.setDireccion(dir + SupergiroD);
-					 else robot.setDireccion(dir + SupergiroI);
-					 historico = (historico+1)%6;
-					 robot.setVelocidad(VelAtras);
-					 
-					 Thread.sleep(2000);
-					 robot.setDireccion(dir);
-					 robot.setVelocidad(vel);
-				}
-				else if(dist > DisCritica && dist < DisOK)
+					if (historico % 6 < 3) robot.giro90(Motor.DERECHO);
+					else robot.giro90(Motor.IZQUIERDO);
+					robot.metros(20, 0.3);
+					if (historico % 6 >= 3) robot.giro90(Motor.DERECHO);
+					else robot.giro90(Motor.IZQUIERDO);
+				} catch (InterruptedException e) {e.printStackTrace();}
+				historico++;
+				robot.setEvitando(false);
+				robot.setDireccion(dir);
+				robot.setVelocidad(vel);
+			}
+			/*else if(dist > DisCritica && dist < DisOK)
+			{
+				robot.sonido(100, 50);
+				robot.setEvitando(true);
+				try
 				{
-					Sound.beep();
-					if(historico / 3 == 0) robot.setDireccion(dir + GiroD);
-					 else robot.setDireccion(dir + GiroI);
-					 historico = (historico+1)%6;
-					robot.setVelocidad(VelFront);
-					
-					 Thread.sleep(2000);
-					 robot.setDireccion(dir);
-					 robot.setVelocidad(vel);
-					
-				}
-				else if (dist > DisOK) {
-					/*robot.setDireccion(Recto);
-					/*robot.setVelocidad(Rapido);*/
-				}
-			} catch(Exception e) {}
+					if (historico % 6 < 3) robot.giro45(Motor.DERECHO);
+					else robot.giro45(Motor.IZQUIERDO);
+				} catch (InterruptedException e) {e.printStackTrace();}
+				historico++;
+				robot.setEvitando(false);
+				robot.setDireccion(dir);
+				robot.setVelocidad(vel);
+			}*/
 		}
 		
 	}

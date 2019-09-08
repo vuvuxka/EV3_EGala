@@ -2,9 +2,9 @@ package equilibrio;
 
 import java.util.*;
 
-import lejos.hardware.*;
 import lejos.utility.Stopwatch;
 import main.Robot;
+import main.Robot.Motor;
 
 public class PID extends Equilibrio{
 
@@ -17,8 +17,9 @@ public class PID extends Equilibrio{
 	private static double vel = 0;
 	private static double vel_ref = 0;
 	private static double pos = 0;
+	private static double pos_ant = 0;
 	private static double pos_ref = 0;
-	private static double media_angulo = 0;
+	private static double media_rate = 0;
 	private static double rate = 0;
 	private static double angulo = 0;
 	
@@ -33,8 +34,8 @@ public class PID extends Equilibrio{
 	private static boolean preError = false;
 	private static double error_cont = 0;
 	
-	private static int vueltas = 0;
 	private static double dir_ant = 0;
+	private static double correcion = 0;
 	
 	final static double Kp = 0.4;
 	final static double Ki = 14;
@@ -50,42 +51,23 @@ public class PID extends Equilibrio{
 		super(robot2);
 	}
 	
-	public double inicializar()
-	{
-	    double g = 0;
-	    double m = 0;
-	    robot.reset();
-		try {
-			Sound.playTone(freq,100);
-			Thread.sleep(100);
-		    robot.reset();
-		    for (int i = 0; i < 20; i++)
-		    {
-		        g += robot.rate(1);
-		        Thread.sleep(5);
-		    }
-		    m = g/20;
-		    Thread.sleep(100);
-		    Sound.playTone(freq,100);
-		    Thread.sleep(100);
-		    Sound.playTone(freq,100);
-		}
-		catch(Exception e) {}
-	    return m;
-	}
-
 	public void run()
 	{
-		media_angulo = inicializar();
+		try {Thread.sleep (100);} catch (InterruptedException e1) {e1.printStackTrace();}
+		media_rate = robot.rate(20);
+		try {Thread.sleep (100);} catch (InterruptedException e1) {e1.printStackTrace();}
+	    robot.sonido(super.freq, 100);
+	    try {Thread.sleep (100);} catch (InterruptedException e1) {e1.printStackTrace();}
+	    robot.sonido(super.freq, 100);
 		reloj.reset();
 		while (!robot.isStop()) 
 		{
 			double r = robot.rate(5);
-			media_angulo = media_angulo*(1-DT*0.2) + DT*0.2*r;
-			rate = r - media_angulo; // (deg)
+			media_rate = media_rate*(1-DT*0.2) + DT*0.2*r;
+			rate = r - media_rate; // (deg)
 			angulo = angulo + rate*DT; // (deg/s)
-			vel_ref = Math.max(-50, Math.min(50,robot.getVelocidad()));
-			pos_ref = pos_ref + vel_ref*DT*0.002;
+			vel_ref = Math.max(-50, Math.min(50,robot.getVelocidad()))*0.002;
+			pos_ref = pos_ref + vel_ref*DT;
 			
 			double valDer = (double)robot.encoder(Robot.Motor.DERECHO);
 			double valIzq = (double)robot.encoder(Robot.Motor.IZQUIERDO);
@@ -95,6 +77,8 @@ public class PID extends Equilibrio{
 			double deg_vel = (val - val_ant)/(N_max*DT);
 			vel = deg_vel*robot.getRADIO()*super.DEG2RAD; //(metros/s)
 			pos = val*super.DEG2RAD*robot.getRADIO(); //(metros)
+			pos = pos + (pos_ant-pos)*0.0002;
+			pos_ant = pos;
 			
 			ganancia = K_angulo*angulo + K_rate*rate + K_pos*(pos+pos_ref) + K_vel*vel;
 			
@@ -111,45 +95,36 @@ public class PID extends Equilibrio{
 			
 			if (error_cont > 20)
 			{
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-				robot.stop(null);
-				Sound.playTone(800,100);
-				Sound.playTone(600,100);
-				Sound.playTone(300,100);
+				robot.stop(Motor.DERECHO);
+				robot.stop(Motor.IZQUIERDO);
+				robot.sonido(800, 100);
+				robot.sonido(600, 100);
+				robot.sonido(300, 100);
 		        robot.setStop(true);
+		        break;
 			}
 			else  preError = nowError;
 
 			double extra = 0;
 			double direccion = Math.max(-50, Math.min(50, robot.getDireccion())); // Limite 50?
-			double correcion = 0;
 			if (direccion == 0)
 			{
 				if (dir_ant != 0) correcion = valIzq - valDer;
-				extra = (valIzq - valDer - correcion)*0.05;
+				extra = (valIzq - valDer - correcion);
 			}
 			else extra = direccion*-0.5;
 
 			dir_ant = direccion;
-			
 			double powerD = out + extra;
 			double powerI = out - extra;
 			
 			
 		    robot.avance(Robot.Motor.DERECHO, (int) Math.max(-100, Math.min(powerD*0.021/robot.getRADIO(), 100)));
 		    robot.avance(Robot.Motor.IZQUIERDO, (int) Math.max(-100, Math.min(powerI*0.021/robot.getRADIO(), 100)));
-		    vueltas++;
 		    
-			while(reloj.elapsed() < DT*1000.0) {
-				try {
-					Thread.sleep (1);
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
+		    while(reloj.elapsed() < DT*1000.0) 
+		    {
+				try {Thread.sleep (1);} catch (InterruptedException e1) {e1.printStackTrace();}
 			}
 			
 			reloj.reset();

@@ -7,6 +7,7 @@ import lejos.hardware.lcd.Image;
 import lejos.hardware.motor.*;
 import lejos.hardware.port.*;
 import lejos.hardware.sensor.*;
+import lejos.robotics.Color;
 import lejos.robotics.EncoderMotor;
 import lejos.robotics.SampleProvider;
 
@@ -14,10 +15,12 @@ import lejos.robotics.SampleProvider;
 
 public class Robot {
 	
-	private String name;
+	private String nombre;
 	private double velocidad;
 	private double direccion;
 	private boolean stop;
+	private boolean evitando;
+	private final double vel2m = 0.0022;
 	
 	final double DIAMETRO = 42; // (milimetros)
 	private final double RADIO = DIAMETRO/(2*1000); // (0.021 metros)
@@ -30,14 +33,15 @@ public class Robot {
 	private final static Port MOTOR_DERECHO = MotorPort.A;
 	private final static Port MOTOR_IZQUIERDO = MotorPort.D;
 	
-	private final EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
-	private final SampleProvider gyroRate = gyroSensor.getRateMode();
-	private final SampleProvider gyroAng = gyroSensor.getAngleMode();
-	private final EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
-	private final GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
-	//private static EV3GyroSensor colorSensor = new EV3GyroSensor(COLOR);
-	private final EV3UltrasonicSensor ultraSensor = new EV3UltrasonicSensor(ULTRASONIDO);
-	private final SampleProvider USreader = ultraSensor.getDistanceMode();
+	private final static EV3GyroSensor gyroSensor = new EV3GyroSensor(GIROSCOPIO);
+	private final static SampleProvider gyroRate = gyroSensor.getRateMode();
+	private final static SampleProvider gyroAng = gyroSensor.getAngleMode();
+	private final static EV3TouchSensor presionSensor = new EV3TouchSensor(PRESION);
+	private final static GraphicsLCD pantalla = BrickFinder.getDefault().getGraphicsLCD(); 
+	private final static EV3ColorSensor colorSensor = new EV3ColorSensor(COLOR);
+	private final static SensorMode colorIDSensor = colorSensor.getColorIDMode();
+	private final static EV3UltrasonicSensor ultraSensor = new EV3UltrasonicSensor(ULTRASONIDO);
+	private final static SampleProvider USreader = ultraSensor.getDistanceMode();
 	
 	
 	private static EncoderMotor mDer = new UnregulatedMotor(MOTOR_DERECHO);
@@ -45,18 +49,19 @@ public class Robot {
 	public enum Motor {DERECHO, IZQUIERDO}
 
 	public Robot(String name)  {
-		this.name = name;
+		this.nombre = name;
 		this.velocidad = 0;
 		this.direccion = 0;
 		this.stop = false;
-		this.gyroSensor.reset();
-		this.pantalla.clear();
+		Robot.gyroSensor.reset();
+		Robot.pantalla.clear();
+		Robot.ultraSensor.enable();
 
 		mDer.resetTachoCount();
 		mIzq.resetTachoCount();
 		Button.ESCAPE.addKeyListener(new KeyListener() {
 			public void keyPressed(Key k) {
-				stop = true;				
+				stop = true;
 			}
 			public void keyReleased(Key k) {
 				
@@ -66,7 +71,7 @@ public class Robot {
 
 	public String toString() 
 	{
-		return name;
+		return nombre;
 	}
 
 	public int encoder(Motor m)
@@ -86,7 +91,7 @@ public class Robot {
 		float[] sample = {0};
 		for(int i = 0; i < vueltas; i++)
 		{
-			this.gyroRate.fetchSample(sample, 0);
+			Robot.gyroRate.fetchSample(sample, 0);
 			media = media + sample[0];
 			try{Thread.sleep(2);} catch(Exception e) {}
 		}
@@ -167,6 +172,40 @@ public class Robot {
 	{
 		this.direccion = direccion;
 	}
+	
+	public void giro90(Motor d) throws InterruptedException
+	{
+		int dir = 1;
+		double vel = velocidad;
+		if (d == Motor.DERECHO) dir = -1;
+		//setVelocidad(-10);
+		Thread.sleep(700);
+		setDireccion(dir*40);
+		setVelocidad(10);
+		Thread.sleep(1000);
+		setDireccion(0);
+		setVelocidad(vel);
+	}
+	public void giro45(Motor d) throws InterruptedException
+	{
+		int dir = 1;
+		double vel = velocidad;
+		if (d == Motor.DERECHO) dir = -1;
+		setVelocidad(-10);
+		Thread.sleep(350);
+		setDireccion(dir*40);
+		setVelocidad(10);
+		Thread.sleep(500);
+		setDireccion(0);
+		setVelocidad(vel);
+	}
+	
+
+	public void metros(int velocidad, double metros) throws InterruptedException {
+		setVelocidad(velocidad);
+		Thread.sleep((long)(metros / (velocidad*vel2m)*1000));
+		setVelocidad(0);
+	}
 
 	public boolean isStop() {
 		return stop;
@@ -177,15 +216,16 @@ public class Robot {
 	}
 
 
-	public GraphicsLCD getPantalla() {
-		return pantalla;
+	public boolean isEvitando() {
+		return evitando;
 	}
 
-	public void quit() {
-		gyroSensor.close();
-		presionSensor.close();
-		ultraSensor.close();
-		pantalla.clear();
+	public void setEvitando(boolean evitando) {
+		this.evitando = evitando;
+	}
+
+	public GraphicsLCD getPantalla() {
+		return pantalla;
 	}
 	
 	public void cara(Imagenes.Emocion emocion)
@@ -196,6 +236,36 @@ public class Robot {
 				GraphicsLCD.TRANS_NONE, pantalla.getWidth()/2, pantalla.getHeight()/2,
 				GraphicsLCD.HCENTER | GraphicsLCD.VCENTER);
 		
+	}
+	
+	public void sonido(int frecuencia, int duracion)
+	{
+		Sound.playTone(frecuencia, duracion);
+	}
+	
+	public enum Colores {NO, NEGRO, AZUL, VERDE, AMARILLO, ROJO, BLANCO}
+	
+	public Robot.Colores color()
+	{
+		float[] sample = new float[Robot.colorIDSensor.sampleSize()];
+		Robot.colorIDSensor.fetchSample(sample, 0);
+		switch((int)sample[0]){
+			case Color.BLACK: return Colores.NEGRO;
+			case Color.BLUE: return Colores.AZUL;
+			case Color.GREEN: return Colores.VERDE;
+			case Color.YELLOW: return Colores.AMARILLO;
+			case Color.RED: return Colores.ROJO;
+			case Color.WHITE: return Colores.BLANCO;
+			default: return Colores.NO;
+		}
+	}
+	
+	public void quit() {
+		gyroSensor.close();
+		presionSensor.close();
+		ultraSensor.close();
+		pantalla.clear();
+		colorSensor.close();
 	}
 
 	public static class Imagenes

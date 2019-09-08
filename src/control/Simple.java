@@ -1,7 +1,6 @@
 package control;
 
 import main.Robot;
-import main.Robot.Imagenes;
 
 public class Simple implements Control {
 	Robot robot;
@@ -11,24 +10,30 @@ public class Simple implements Control {
 		this.robot = robot;
 	}
 
-	public void ejecutar() throws InterruptedException {
-		/*final GraphicsLCD lcd = robot.getPantalla();
-        try {
-            final Image image = Image.createImage(new BufferedInputStream(new FileInputStream("images/todo.jpg")));
-            lcd.drawImage(image, 40, 10, 0);
-            lcd.refresh();
-        }catch (IOException e){
-            robot.print("ERROR");
-        }*/
-		robot.setDireccion(0);
-		robot.setVelocidad(10);
-		robot.cara(Imagenes.Emocion.NEUTRO);
-		Thread.sleep(1000);
-		robot.cara(Imagenes.Emocion.ENFADADO);
-		Thread.sleep(1000);
-		robot.cara(Imagenes.Emocion.ERROR);
-		Thread.sleep(10000);
-		
+	public void ejecutar() {
+		robot.setVelocidad(20);
+		try {
+			while(!robot.isStop()) 
+			{
+				
+					if (colorNoNegro() && !robot.isEvitando())
+					{
+						robot.giro90(Robot.Motor.DERECHO);
+					}
+			}
+		}
+		catch(InterruptedException e)
+		{
+			Thread.currentThread().interrupt();
+	        System.err.println("Ejecución interrumpida");
+	        robot.setVelocidad(0);
+		}
+
 	}
 
+	private boolean colorNoNegro() throws InterruptedException {
+		boolean negro = robot.color() == Robot.Colores.NEGRO;
+		Thread.sleep(100);
+		return !(negro && robot.color() == Robot.Colores.NEGRO) ;
+	}
 }

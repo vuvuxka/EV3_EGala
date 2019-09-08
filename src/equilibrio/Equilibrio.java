@@ -13,7 +13,6 @@ public abstract class Equilibrio implements Runnable{
 		robot = robot2;
 	}
 	
-	public abstract double inicializar();
 
 	public abstract void run();
 
